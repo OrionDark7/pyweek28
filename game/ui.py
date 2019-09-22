@@ -4,12 +4,12 @@ import pygame
 
 pygame.font.init()
 
-font = pygame.font.Font(None, 60)
+font = pygame.font.Font("./font/8-BIT WONDER.TTF", 32)
 color = [0, 0, 0]
 
 def fontSize(size):
     global font
-    font = pygame.font.Font(None, int(size))
+    font = pygame.font.Font("./font/8-BIT WONDER.TTF", int(size))
 
 def text(message, position, window, centered = False):
     global font, color
