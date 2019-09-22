@@ -52,6 +52,11 @@ returntomenu = ui.button("RETURN TO MENU", [400, 290], centered=True)
 cursor = attackmod.cursor()
 boxgrp = pygame.sprite.Group()
 
+power = 0
+enemypower = 0
+ups = 0
+min = 60
+
 player = entities.Player()
 mobs = pygame.sprite.Group()
 j = random.randint(1, 3)
@@ -84,10 +89,17 @@ while running:
                     for cmob in mobs:
                         if cmob.clicked:
                             amob = cmob
-                            attack = random.randint(0, 1)
+                            attack = random.randint(0, 2)
                             screen = "attack"
                             timechange = 0
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
+                            if attack == 2:
+                                effect = random.randint(0, 1)
+                                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                            elif attack == 1:
+                                player.health += 1
+                            else:
+                                pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
@@ -172,7 +184,16 @@ while running:
                             else:
                                 indicator3.fill([9, 101, 179])
                             pygame.time.set_timer(pygame.USEREVENT + 1, 100)
-
+                elif attack == 2:
+                    if event.key == pygame.K_SPACE:
+                        pygame.time.set_timer(pygame.USEREVENT+1, 2)
+                        ups = 10
+                    elif (event.key == pygame.K_RSHIFT or event.key == pygame.K_LSHIFT) and power >= enemypower and enemypower >= min:
+                        enemypower = 0
+                        if effect == 1:
+                            amob.health -= 1
+                        effect = random.randint(0, 1)
+                        min = random.randint(50, 80)
         if event.type == pygame.USEREVENT:
             if screen == "attack":
                 if attack == 0:
@@ -223,6 +244,25 @@ while running:
                         indicator1.fill([249, 255, 127])
                         indicator2.fill([249, 255, 127])
                         indicator3.fill(attackcolors0[effect])
+                elif attack == 2:
+                    if enemypower < 100:
+                        if random.randint(1, 4) == 1:
+                            enemypower += random.choice([0.25, 0.5, 1])
+                    if enemypower >= 100:
+                        if effect == 0:
+                            player.health -= 1
+                        enemypower = 0
+                        effect = random.randint(0, 1)
+
+                    if power > 0:
+                        power -= 1
+                    if power >= 100:
+                        power = 100
+
+                    if ups > 0:
+                        ups -= 1
+                        power += 2
+
 
     if screen == "game":
         window.fill([0, 200, 255])
@@ -277,8 +317,6 @@ while running:
                 screen = "game"
 
         if attack == 1:
-
-
             ui.color = [255, 255, 255]
 
             ui.fontSize(64)
@@ -300,6 +338,43 @@ while running:
             if amob.health <= 0:
                 amob.kill()
                 screen = "game"
+
+        if attack == 2:
+            ui.color = [255, 255, 255]
+            ui.fontSize(64)
+            ui.text("ATTACK", [400, 5], window, centered=True)
+            ui.text(player.health, [100, 520], window, centered=True)
+            ui.text(amob.health, [690, 520], window, centered=True)
+
+            ui.fontSize(16)
+            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+            powerbar = pygame.surface.Surface([600, 50])
+            powerbar2 = pygame.surface.Surface([(power/100) * 600, 50])
+
+            powerbar.fill([216, 174, 245])
+            powerbar2.fill([175, 64, 245])
+
+            enemybar = pygame.surface.Surface([600, 50])
+            enemybar2 = pygame.surface.Surface([(enemypower/100) * 600, 50])
+
+            if effect == 0:
+                enemybar2.fill((255, 10, 0))
+                enemybar.fill((255, 110, 100))
+            elif effect == 1:
+                enemybar2.fill((20, 120, 204))
+                enemybar.fill((120, 220, 255))
+
+            window.blit(enemybar, [100, 340])
+            window.blit(enemybar2, [100, 340])
+
+            window.blit(powerbar, [100, 410])
+            window.blit(powerbar2, [100, 410])
+
+            minbar = pygame.surface.Surface([5, 60])
+            minbar.fill([255, 255, 255])
+            window.blit(minbar, [100 + ((min / 100) * 600), 335])
 
     if screen == "game over":
         window.fill([30, 30, 30])
