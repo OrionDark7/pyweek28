@@ -32,7 +32,14 @@ class button(pygame.sprite.Sprite):  # takes global font and color
             self.rect.left, self.rect.top = position
 
     def pos(self):  # saves me from writing a couple of characters
-        return tuple(self.rect.left, self.rect.top)
+        return [self.rect.left, self.rect.top]
 
     def update(self, window):  # displays button, just named update for sprite group purposes
         window.blit(self.image, self.pos())
+
+    def click(self, mouse):
+        clicked = False
+        if self.rect.collidepoint(mouse):
+            clicked = True
+
+        return clicked

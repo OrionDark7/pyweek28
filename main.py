@@ -14,6 +14,7 @@ pygame.time.set_timer(pygame.USEREVENT, 1000)
 pygame.time.set_timer(pygame.USEREVENT+1, 200)
 
 mouse = [0,0]
+pressed = [0, 0, 0]
 
 wall2 = pygame.image.load("./images/textures/wall2.png")
 wall = pygame.image.load("./images/textures/wall.png")
@@ -29,10 +30,11 @@ for i in range(10):
     side1.blit(wall, [0, i * 64])
     side2.blit(wall, [0, i * 64])
 
-attackcolors0 = [(255, 10, 0), (20, 120, 204), [249, 255, 127]]
+attackcolors0 = [(255, 10, 0), (20, 120, 204), (249, 255, 127)]
+icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png")]
 hit = True
 effect = 1
-indicator = 0
+indicator = -1
 hits = 1
 starthits = 1
 timechange = 0
@@ -43,28 +45,31 @@ indicator1.fill([249, 255, 127])
 indicator2.fill([249, 255, 127])
 indicator3.fill([249, 255, 127])
 
-cubes = pygame.sprite.Group()
+ui.fontSize(32)
+ui.color = [255, 255, 255]
+returntomenu = ui.button("RETURN TO MENU", [400, 290], centered=True)
+
+cursor = attackmod.cursor()
+boxgrp = pygame.sprite.Group()
 
 player = entities.Player()
 mobs = pygame.sprite.Group()
 j = random.randint(1, 3)
 for i in range(j):
-    print(i)
     mob = entities.Mob([256 + ((i)*100), 278])
     mobs.add(mob)
 amob = None
-print(mobs)
 
 screen = "game"
 
 running = True
 
 def update(action, group):
-    global mobs, mouse, cubes
+    global mobs, mouse, pressed, cursor
     if group == mobs:
         mobs.update(str(action), window, mouse)
-    elif group == cubes:
-        cubes.update(str(action), window, mouse)
+    if group == boxgrp:
+        boxgrp.update(cursor.rect, pressed)
 
 while running:
     for event in pygame.event.get():
@@ -79,17 +84,31 @@ while running:
                     for cmob in mobs:
                         if cmob.clicked:
                             amob = cmob
-                            attack = 0
+                            attack = random.randint(0, 1)
                             screen = "attack"
                             timechange = 0
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
+                elif screen == "game over":
+                    if returntomenu.click(mouse):
+                        screen = "menu"
+            if pressed[0] == 1 or pressed[2] == 1:
                 if screen == "attack":
                     if attack == 1:
-                        update("click", cubes)
-                        for i in cubes:
-                            if i.clicked:
-                                if i.type == 0:
+                        update("click", boxgrp)
+                        clicked = False
+                        for bx in boxgrp:
+                            if bx.clicked:
+                                clicked = True
+                                if bx.type == 0 and pressed[0]:
+                                    player.health -= 1
+                                elif bx.type == 1 and pressed[0]:
                                     amob.health -= 1
+                                elif bx.type == 0 and pressed[1]:
+                                    bx.kill()
+                                bx.kill()
+                                break
+                        if not clicked:
+                            player.health -= 1
         if event.type == pygame.KEYDOWN:
             if screen == "attack":
                 if attack == 0:
@@ -157,13 +176,10 @@ while running:
         if event.type == pygame.USEREVENT:
             if screen == "attack":
                 if attack == 0:
-                    print("in")
                     if not hit and effect == 0:
                         player.health -= 1
-                        print("in 1")
                     if not hit:
                         indicator = random.randint(0,2)
-                        print(indicator)
                         hits = random.randint(3, 7)
                         starthits = hits
                         effect = random.randint(0, 1)
@@ -186,10 +202,11 @@ while running:
 
                     if timechange > 2500: timechange = 2500
 
-                    pygame.time.set_timer(pygame.USEREVENT, random.randint(500, 2000))
+                    pygame.time.set_timer(pygame.USEREVENT, random.randint(800, 1600))
                     hit=False
                 if attack == 1:
-                    cubes.add(attackmod.fallingobj())
+                    boxgrp.add(attackmod.hitbox())
+                    pygame.time.set_timer(pygame.USEREVENT, random.randint(1000, 2000))
 
         if event.type == pygame.USEREVENT + 1:
             if screen == "attack":
@@ -220,6 +237,8 @@ while running:
 
     if screen == "attack":
         window.fill([30, 30, 30])
+        if player.health <= 0:
+            screen = "game over"
         if attack == 0:
             ui.color = [255, 255, 255]
 
@@ -234,12 +253,10 @@ while running:
             window.blit(indicator2, [300, 225])
             ui.text("Press S", [400, 396], window, centered=True)
             window.blit(indicator3, [550, 225])
-            ui.text("Press D1", [650, 396], window, centered=True)
+            ui.text("Press D", [650, 396], window, centered=True)
 
-            print(indicator)
 
             if indicator >= 0:
-                print("in")
                 bar = pygame.surface.Surface([(hits / starthits) * 200, 5])
                 bar2 = pygame.surface.Surface([200, 5])
 
@@ -249,28 +266,56 @@ while running:
                 window.blit(bar2, [50 + (indicator*250), 370])
                 window.blit(bar, [50 + (indicator * 250), 370])
 
+                window.blit(icons[effect], [86 + (indicator * 250), 237])
+
             ui.fontSize(16)
             ui.text("YOUR HEALTH", [100, 500], window, centered=True)
             ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
-
-            print(timechange)
 
             if amob.health <= 0:
                 amob.kill()
                 screen = "game"
 
         if attack == 1:
+
+
             ui.color = [255, 255, 255]
 
             ui.fontSize(64)
             ui.text("ATTACK", [400, 5], window, centered=True)
+            ui.text(player.health, [100, 520], window, centered=True)
+            ui.text(amob.health, [690, 520], window, centered=True)
 
-            surface = pygame.surface.Surface([800, 50])
-            surface.fill((20, 120, 204))
-            window.blit(surface, [0, 750])
+            surface = pygame.surface.Surface([600, 10])
+            surface.fill((255, 255, 255))
+            window.blit(surface, [100, 295])
 
-            update("draw", cubes)
-            update("fall", cubes)
+            boxgrp.draw(window)
+            cursor.update("draw", window)
+
+            ui.fontSize(16)
+            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+            if amob.health <= 0:
+                amob.kill()
+                screen = "game"
+
+    if screen == "game over":
+        window.fill([30, 30, 30])
+
+        ui.fontSize(64)
+        ui.text("GAME OVER", [400, 5], window, centered=True)
+
+        returntomenu.update(window)
+
+    if screen == "menu":
+        window.fill([30, 30, 30])
+
+        ui.fontSize(60)
+        ui.text("TOWER OF DOOM", [400, 5], window, centered=True)
+
+
 
     pygame.display.flip()
 

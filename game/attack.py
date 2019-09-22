@@ -4,28 +4,42 @@
 
 import pygame, random
 
-class fallingobj(pygame.sprite.Sprite):
+class hitbox(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.type = random.randint(0, 1)
-        size = random.randint(10, 30)
-        self.image = pygame.surface.Surface([size, size])
+        self.image = pygame.surface.Surface([random.randint(30, 70), 50])
         self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = random.randint(0, 800-size), 0-size
+        self.rect.left, self.rect.top = [random.randint(101, 700-self.rect.width), 275]
+        self.type = random.randint(0, 1)
+        colors = [(255, 10, 0), (249, 255, 127)]
+        self.image.fill(colors[self.type])
         self.clicked = False
-        self.speed = random.choice([0.25, 0.5, 1])
-        if self.type == 0:
-            self.image.fill([249, 255, 127])
-        else:
-            self.image.fill((255, 10, 0))
-    def update(self, action, window, mouse):
-        self.clicked = False
+    def update(self, crect, buttons):
+        if self.rect.colliderect(crect):
+            if self.type == 0 and (buttons[0] or buttons[2]):
+                self.clicked = True
+            elif self.type == 1 and buttons[0]:
+                self.clicked = True
 
-        if action == "fall":
-            self.rect.top += self.speed
-
-        if action == "draw":
-            window.blit(self.image, [self.rect.left, self.rect.top])
-
-        if action == "click" and self.rect.collidepoint(mouse):
-            self.clicked = True
+class cursor(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.surface.Surface([5, 60])
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = [101, 270]
+        self.image.fill((20, 120, 204))
+        self.direction = 1
+    def draw(self, window):
+        window.blit(self.image, [self.rect.left, self.rect.top])
+    def update(self, draw, window):
+        if self.rect.left <= 100:
+            self.rect.left = 100
+            if self.direction == -1:
+                self.direction = 1
+        elif self.rect.right >= 700:
+            self.rect.right
+            if self.direction == 1:
+                self.direction = -1
+        self.rect.left += self.direction
+        if draw == "draw":
+            self.draw(window)
