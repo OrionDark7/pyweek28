@@ -7,7 +7,7 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("./images/player/character.png")
         self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = [64, 278]
+        self.rect.left, self.rect.top = [128, 278]
 
         self.health = 10
         self.gear = {"weapon" : None, "sheild" : None,
