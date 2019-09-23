@@ -12,6 +12,7 @@ window.fill([255, 255, 255])
 
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 pygame.time.set_timer(pygame.USEREVENT+1, 200)
+pygame.time.set_timer(pygame.USEREVENT+2, 1000)
 
 mouse = [0,0]
 pressed = [0, 0, 0]
@@ -36,6 +37,7 @@ hit = True
 effect = 1
 indicator = -1
 hits = 1
+time = 0
 starthits = 1
 timechange = 0
 indicator1 = pygame.surface.Surface([200, 150])
@@ -56,6 +58,11 @@ power = 0
 enemypower = 0
 ups = 0
 min = 60
+max = 90
+
+sequence = "1234567890"
+newsequence = ""
+characters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
 
 player = entities.Player()
 mobs = pygame.sprite.Group()
@@ -68,6 +75,13 @@ amob = None
 screen = "game"
 
 running = True
+
+def generateSequence():
+    global characters
+    newstring = ""
+    for i in range(random.randint(5, 10)):
+        newstring = newstring + random.choice(characters)
+    return newstring
 
 def update(action, group):
     global mobs, mouse, pressed, cursor
@@ -89,7 +103,7 @@ while running:
                     for cmob in mobs:
                         if cmob.clicked:
                             amob = cmob
-                            attack = random.randint(0, 2)
+                            attack = random.randint(0, 3)
                             screen = "attack"
                             timechange = 0
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
@@ -98,6 +112,11 @@ while running:
                                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
                             elif attack == 1:
                                 player.health += 1
+                            elif attack == 3:
+                                sequence = generateSequence()
+                                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                                time = random.randint(1, 5)
+                                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
                             else:
                                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                 elif screen == "game over":
@@ -194,6 +213,12 @@ while running:
                             amob.health -= 1
                         effect = random.randint(0, 1)
                         min = random.randint(50, 80)
+                        max = random.randint(min + 15, 100)
+                elif attack == 3:
+                    if pygame.key.name(event.key) in characters and len(newsequence) < 10:
+                        newsequence = newsequence + pygame.key.name(event.key)
+                    elif event.key == pygame.K_BACKSPACE and len(newsequence) > 0:
+                        newsequence = newsequence[0:len(newsequence)-1]
         if event.type == pygame.USEREVENT:
             if screen == "attack":
                 if attack == 0:
@@ -228,6 +253,12 @@ while running:
                 if attack == 1:
                     boxgrp.add(attackmod.hitbox())
                     pygame.time.set_timer(pygame.USEREVENT, random.randint(1000, 2000))
+                if attack == 3:
+                    if effect == 0:
+                        player.health -= 1
+                        effect = random.randint(0, 1)
+                        time = random.randint(2, 8)
+                        pygame.time.set_timer(pygame.USEREVENT+2, time * 1000)
 
         if event.type == pygame.USEREVENT + 1:
             if screen == "attack":
@@ -253,6 +284,7 @@ while running:
                             player.health -= 1
                         enemypower = 0
                         effect = random.randint(0, 1)
+                        max = random.randint(min + 15, 100)
 
                     if power > 0:
                         power -= 1
@@ -262,6 +294,10 @@ while running:
                     if ups > 0:
                         ups -= 1
                         power += 2
+        if event.type == pygame.USEREVENT+2:
+            if screen == "attack":
+                if attack == 3:
+                    time -= 1
 
 
     if screen == "game":
@@ -376,12 +412,70 @@ while running:
             minbar.fill([255, 255, 255])
             window.blit(minbar, [100 + ((min / 100) * 600), 335])
 
+            maxbar = pygame.surface.Surface([5, 60])
+            maxbar.fill((255, 10, 0))
+            window.blit(maxbar, [100 + ((max / 100) * 600), 405])
+
             ui.text("POWER", [100, 465], window)
             ui.text("ENEMY POWER", [100, 320], window)
+
+            if power > max:
+                #min = random.randint(60, 80)
+                #max = random.randint(min+10, 100)
+                #effect = random.randint(0, 1)
+                power = 0
 
             if amob.health <= 0:
                 amob.kill()
                 screen = "game"
+
+        if attack == 3:
+            ui.color = [255, 255, 255]
+            ui.fontSize(64)
+            ui.text("ATTACK", [400, 5], window, centered=True)
+            ui.text(player.health, [100, 520], window, centered=True)
+            ui.text(amob.health, [690, 520], window, centered=True)
+
+            ui.fontSize(16)
+            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+            if  len(newsequence) == len(sequence) and newsequence == sequence:
+                if effect == 1:
+                    amob.health -= 1
+                newsequence = ""
+                sequence = generateSequence()
+                time = random.randint(1, 5)
+                pygame.time.set_timer(pygame.USEREVENT, time*1000)
+                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+            elif len(newsequence) == len(sequence) and not newsequence == sequence:
+                player.health -= 1
+                newsequence = ""
+                sequence = generateSequence()
+                time = random.randint(1, 5)
+                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+
+            ui.fontSize(32)
+            if effect == 0:
+                ui.color = attackcolors0[0]
+            elif effect == 1:
+                ui.color = attackcolors0[1]
+            ui.text(sequence, [400, 250], window, centered=True)
+            ui.color = [255, 255, 255]
+            ui.text(newsequence, [400, 300], window, centered=True)
+
+            if time <= 0:
+                print("in")
+                if effect == 0:
+                    player.health -= 1
+                newsequence = ""
+                sequence = generateSequence()
+                time = random.randint(3, 8)
+                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+
+            ui.text("time left  " + str(time), [400, 400], window, centered=True)
 
     if screen == "game over":
         window.fill([30, 30, 30])
