@@ -376,6 +376,13 @@ while running:
             minbar.fill([255, 255, 255])
             window.blit(minbar, [100 + ((min / 100) * 600), 335])
 
+            ui.text("POWER", [100, 465], window)
+            ui.text("ENEMY POWER", [100, 320], window)
+
+            if amob.health <= 0:
+                amob.kill()
+                screen = "game"
+
     if screen == "game over":
         window.fill([30, 30, 30])
 
