@@ -32,7 +32,7 @@ for i in range(10):
     side2.blit(wall, [0, i * 64])
 
 attackcolors0 = [(255, 10, 0), (20, 120, 204), (249, 255, 127)]
-icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png")]
+icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png"), ]
 hit = True
 effect = 1
 indicator = -1
@@ -51,6 +51,14 @@ ui.fontSize(32)
 ui.color = [255, 255, 255]
 returntomenu = ui.button("RETURN TO MENU", [400, 290], centered=True)
 
+menubuttons = pygame.sprite.Group()
+play = ui.button("PLAY", [400, 290], centered=True)
+menubuttons.add(play)
+howto = ui.button("HOW TO PLAY", [400, 340], centered=True)
+menubuttons.add(howto)
+quitbutton = ui.button("QUIT", [400, 390], centered=True)
+menubuttons.add(quitbutton)
+
 cursor = attackmod.cursor()
 boxgrp = pygame.sprite.Group()
 
@@ -60,6 +68,9 @@ ups = 0
 min = 60
 max = 90
 
+level = 1
+animation = 0
+
 sequence = "1234567890"
 newsequence = ""
 characters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
@@ -68,18 +79,18 @@ player = entities.Player()
 mobs = pygame.sprite.Group()
 j = random.randint(1, 3)
 for i in range(j):
-    mob = entities.Mob([256 + ((i)*100), 278])
+    mob = entities.Mob([256 + ((i)*100), 278], level)
     mobs.add(mob)
 amob = None
 
-screen = "game"
+screen = "menu"
 
 running = True
 
 def generateSequence():
     global characters
     newstring = ""
-    for i in range(random.randint(5, 10)):
+    for i in range(random.randint(4, 7)):
         newstring = newstring + random.choice(characters)
     return newstring
 
@@ -115,13 +126,20 @@ while running:
                             elif attack == 3:
                                 sequence = generateSequence()
                                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                                time = random.randint(1, 5)
+                                time = random.randint(5, 9)
                                 pygame.time.set_timer(pygame.USEREVENT, time * 1000)
                             else:
                                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
+                elif screen == "menu":
+                    if play.click(mouse):
+                        screen = "game"
+                    elif quitbutton.click(mouse):
+                        running = False
+                    elif howto.click(mouse):
+                        screen = "how to play"
             if pressed[0] == 1 or pressed[2] == 1:
                 if screen == "attack":
                     if attack == 1:
@@ -257,7 +275,7 @@ while running:
                     if effect == 0:
                         player.health -= 1
                         effect = random.randint(0, 1)
-                        time = random.randint(2, 8)
+                        time = random.randint(5, 9)
                         pygame.time.set_timer(pygame.USEREVENT+2, time * 1000)
 
         if event.type == pygame.USEREVENT + 1:
@@ -294,6 +312,8 @@ while running:
                     if ups > 0:
                         ups -= 1
                         power += 2
+            if screen == "enemy defeated":
+                a += 1
         if event.type == pygame.USEREVENT+2:
             if screen == "attack":
                 if attack == 3:
@@ -350,7 +370,10 @@ while running:
 
             if amob.health <= 0:
                 amob.kill()
-                screen = "game"
+                screen = "enemy defeated"
+                animation = 0
+                a = 1
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
 
         if attack == 1:
             ui.color = [255, 255, 255]
@@ -373,7 +396,10 @@ while running:
 
             if amob.health <= 0:
                 amob.kill()
-                screen = "game"
+                screen = "enemy defeated"
+                animation = 0
+                a = 1
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
 
         if attack == 2:
             ui.color = [255, 255, 255]
@@ -427,7 +453,10 @@ while running:
 
             if amob.health <= 0:
                 amob.kill()
-                screen = "game"
+                screen = "enemy defeated"
+                animation = 0
+                a = 1
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
 
         if attack == 3:
             ui.color = [255, 255, 255]
@@ -445,14 +474,14 @@ while running:
                     amob.health -= 1
                 newsequence = ""
                 sequence = generateSequence()
-                time = random.randint(1, 5)
+                time = random.randint(5, 9)
                 pygame.time.set_timer(pygame.USEREVENT, time*1000)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
             elif len(newsequence) == len(sequence) and not newsequence == sequence:
                 player.health -= 1
                 newsequence = ""
                 sequence = generateSequence()
-                time = random.randint(1, 5)
+                time = random.randint(5, 9)
                 pygame.time.set_timer(pygame.USEREVENT, time * 1000)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
 
@@ -471,11 +500,18 @@ while running:
                     player.health -= 1
                 newsequence = ""
                 sequence = generateSequence()
-                time = random.randint(3, 8)
+                time = random.randint(5, 9)
                 pygame.time.set_timer(pygame.USEREVENT, time * 1000)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
 
             ui.text("time left  " + str(time), [400, 400], window, centered=True)
+
+            if amob.health <= 0:
+                amob.kill()
+                screen = "enemy defeated"
+                animation = 0
+                a = 1
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
 
     if screen == "game over":
         window.fill([30, 30, 30])
@@ -491,6 +527,46 @@ while running:
         ui.fontSize(60)
         ui.text("TOWER OF DOOM", [400, 5], window, centered=True)
 
+        menubuttons.draw(window)
+
+    if screen == "how to play":
+        window.fill([30, 30, 30])
+
+    if screen == "enemy defeated":
+        if animation == 0:
+            surface = pygame.surface.Surface([8*a, 6*a])
+            surface.fill([30, 30, 30])
+            window.blit(surface, [396 - (4*a), 297 - (3*a)])
+            if a >= 100:
+                animation = 1
+                a = 0
+        if animation == 1:
+            surface = pygame.surface.Surface([800, 600])
+            surface.fill([30, 30, 30])
+            window.blit(surface, [0, 0])
+            ui.color = [255, 255, 255]
+            ui.fontSize(48)
+            ui.text("ENEMY DEFEATED", [400, (a*a)/2], window, centered = True)
+            if (a*a)/2 >= 290:
+                animation = 2
+                a = 0
+        if animation == 2:
+            surface = pygame.surface.Surface([800, 600])
+            surface.fill([30, 30, 30])
+            window.blit(surface, [0, 0])
+            ui.color = [255, 255, 255]
+            ui.fontSize(48)
+            ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
+            if a >= 1000:
+                animation = 3
+                a = 0
+        if animation == 3:
+            surface = pygame.surface.Surface([800, 600])
+            surface.fill([30, 30, 30])
+            window.blit(surface, [0, 0])
+            ui.color = [255, 255, 255]
+            ui.fontSize(48)
+            ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
 
 
     pygame.display.flip()

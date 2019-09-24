@@ -21,13 +21,13 @@ class Player(pygame.sprite.Sprite):
 
 
 class Mob(pygame.sprite.Sprite):
-    def __init__(self, pos):
+    def __init__(self, pos, level):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("./images/goo/goo.png")
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = pos
 
-        self.health = random.randint(5, 10)
+        self.health = random.randint(5 + (2*(level-1)), 10 + (2*(level-1)))
 
         self.clicked = False
 
