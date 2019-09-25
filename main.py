@@ -32,7 +32,7 @@ for i in range(10):
     side2.blit(wall, [0, i * 64])
 
 attackcolors0 = [(255, 10, 0), (20, 120, 204), (249, 255, 127)]
-icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png"), ]
+icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png"), pygame.image.load("./images/icons/coins.png"), pygame.image.load("./images/icons/health.png")]
 hit = True
 effect = 1
 indicator = -1
@@ -70,6 +70,8 @@ max = 90
 
 level = 1
 animation = 0
+coins = 0
+coinchange = 0
 
 sequence = "1234567890"
 newsequence = ""
@@ -118,6 +120,7 @@ while running:
                             screen = "attack"
                             timechange = 0
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
+                            coinchange = amob.health
                             if attack == 2:
                                 effect = random.randint(0, 1)
                                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
@@ -374,6 +377,7 @@ while running:
                 animation = 0
                 a = 1
                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                healthchange = random.randint(1, 3)
 
         if attack == 1:
             ui.color = [255, 255, 255]
@@ -400,6 +404,7 @@ while running:
                 animation = 0
                 a = 1
                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                healthchange = random.randint(1, 3)
 
         if attack == 2:
             ui.color = [255, 255, 255]
@@ -457,6 +462,7 @@ while running:
                 animation = 0
                 a = 1
                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                healthchange = random.randint(1, 3)
 
         if attack == 3:
             ui.color = [255, 255, 255]
@@ -512,6 +518,7 @@ while running:
                 animation = 0
                 a = 1
                 pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                healthchange = random.randint(1, 3)
 
     if screen == "game over":
         window.fill([30, 30, 30])
@@ -535,14 +542,14 @@ while running:
     if screen == "enemy defeated":
         if animation == 0:
             surface = pygame.surface.Surface([8*a, 6*a])
-            surface.fill([30, 30, 30])
+            surface.fill([0, 0, 0])
             window.blit(surface, [396 - (4*a), 297 - (3*a)])
             if a >= 100:
                 animation = 1
                 a = 0
         if animation == 1:
             surface = pygame.surface.Surface([800, 600])
-            surface.fill([30, 30, 30])
+            surface.fill([0, 0, 0])
             window.blit(surface, [0, 0])
             ui.color = [255, 255, 255]
             ui.fontSize(48)
@@ -550,23 +557,60 @@ while running:
             if (a*a)/2 >= 290:
                 animation = 2
                 a = 0
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2000)
         if animation == 2:
             surface = pygame.surface.Surface([800, 600])
-            surface.fill([30, 30, 30])
+            surface.fill([0, 0, 0])
             window.blit(surface, [0, 0])
             ui.color = [255, 255, 255]
             ui.fontSize(48)
             ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
-            if a >= 1000:
+            if a >= 1:
                 animation = 3
                 a = 0
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
         if animation == 3:
             surface = pygame.surface.Surface([800, 600])
-            surface.fill([30, 30, 30])
+            surface.fill([0, 0, 0])
             window.blit(surface, [0, 0])
             ui.color = [255, 255, 255]
             ui.fontSize(48)
             ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
+            ui.fontSize(24)
+            if (a*a)/4 <= 290:
+                ui.text("GAINED " + str(coinchange), [200, 800 - (a * a) / 4], window, centered=True)
+                window.blit(icons[2], [168, 700 - (a * a) / 4])
+            else:
+                animation = 4
+                a = 0
+        if animation == 4:
+            surface = pygame.surface.Surface([800, 600])
+            surface.fill([0, 0, 0])
+            window.blit(surface, [0, 0])
+            ui.color = [255, 255, 255]
+            ui.fontSize(48)
+            ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
+            ui.fontSize(24)
+            ui.text("GAINED " + str(coinchange), [200, 800 - 290], window, centered=True)
+            window.blit(icons[2], [168, 700 - 290])
+            if (a*a)/4 <= 290:
+                ui.text("GAINED " + str(healthchange), [600, 800 - (a * a) / 4], window, centered=True)
+                window.blit(icons[3], [568, 700 - (a * a) / 4])
+            else:
+                animation = 5
+                a = 0
+        if animation == 5:
+            surface = pygame.surface.Surface([800, 600])
+            surface.fill([0, 0, 0])
+            window.blit(surface, [0, 0])
+            ui.color = [255, 255, 255]
+            ui.fontSize(48)
+            ui.text("ENEMY DEFEATED", [400, 290], window, centered=True)
+            ui.fontSize(24)
+            ui.text("GAINED " + str(coinchange), [200, 800 - 290], window, centered=True)
+            window.blit(icons[2], [168, 700 - 290])
+            ui.text("GAINED " + str(healthchange), [600, 800 - 290], window, centered=True)
+            window.blit(icons[3], [568, 700 - 290])
 
 
     pygame.display.flip()

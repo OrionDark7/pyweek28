@@ -2,6 +2,8 @@
 
 import pygame, random
 
+moblist = ["goo", "ghost"]
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -10,8 +12,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.left, self.rect.top = [128, 278]
 
         self.health = 10
-        self.gear = {"weapon" : None, "sheild" : None,
-                     "headgear" : None, "chestgear" : None, "leggings" : None, "boots" : None}
+        self.gear = {"weapon" : None, "sheild" : None, "armor" : None}
 
     def update(self):
         pass
@@ -23,7 +24,8 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     def __init__(self, pos, level):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("./images/goo/goo.png")
+        self.type = random.choice(moblist)
+        self.image = pygame.image.load("./images/"+ self.type + "/" + self.type + ".png")
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = pos
 

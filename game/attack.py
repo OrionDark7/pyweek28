@@ -7,7 +7,7 @@ import pygame, random
 class hitbox(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.surface.Surface([random.randint(30, 70), 50])
+        self.image = pygame.surface.Surface([random.randint(40, 100), 50])
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = [random.randint(101, 700-self.rect.width), 275]
         self.type = random.randint(0, 1)
@@ -26,7 +26,7 @@ class cursor(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.surface.Surface([5, 60])
         self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = [101, 270]
+        self.rect.left, self.rect.top = [100, 270]
         self.image.fill((20, 120, 204))
         self.direction = 1
     def draw(self, window):
@@ -37,9 +37,9 @@ class cursor(pygame.sprite.Sprite):
             if self.direction == -1:
                 self.direction = 1
         elif self.rect.right >= 700:
-            self.rect.right
+            self.rect.right = 700
             if self.direction == 1:
                 self.direction = -1
-        self.rect.left += self.direction
+        self.rect.left += self.direction * 2
         if draw == "draw":
             self.draw(window)
