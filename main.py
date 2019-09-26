@@ -17,6 +17,9 @@ pygame.time.set_timer(pygame.USEREVENT+2, 1000)
 mouse = [0,0]
 pressed = [0, 0, 0]
 
+pygame.mixer.init()
+sfx = {"attack":pygame.mixer.Sound("./sfx/Attack.wav"), "hit":pygame.mixer.Sound("./sfx/Hit.wav"), "powerup":pygame.mixer.Sound("./sfx/Powerup.wav"), "select":pygame.mixer.Sound("./sfx/Select.wav")}
+
 wall2 = pygame.image.load("./images/textures/wall2.png")
 wall = pygame.image.load("./images/textures/wall.png")
 
@@ -79,15 +82,30 @@ characters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
 
 player = entities.Player()
 mobs = pygame.sprite.Group()
-j = random.randint(1, 3)
-for i in range(j):
-    mob = entities.Mob([256 + ((i)*100), 278], level)
-    mobs.add(mob)
 amob = None
+
+def createMobs():
+    j = random.randint(1, 3)
+    for i in range(j):
+        mob = entities.Mob([256 + ((i)*100), 278], level)
+        mobs.add(mob)
+
+createMobs()
 
 screen = "menu"
 
 running = True
+
+def gameScreen():
+    window.fill([0, 200, 255])
+    window.blit(surf, [80, 0])
+    render = pygame.surface.Surface([700, 400])
+    render.fill([143, 72, 10])
+    window.blit(render, [50, 320])
+    window.blit(side1, [32, 0])
+    window.blit(side2, [704, 0])
+    player.draw(window)
+    update("draw", mobs)
 
 def generateSequence():
     global characters
@@ -136,6 +154,9 @@ while running:
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
+                        player = entities.Player()
+                        createMobs()
+
                 elif screen == "menu":
                     if play.click(mouse):
                         screen = "game"
@@ -153,10 +174,13 @@ while running:
                                 clicked = True
                                 if bx.type == 0 and pressed[0]:
                                     player.health -= 1
+                                    sfx["hit"].play()
                                 elif bx.type == 1 and pressed[0]:
                                     amob.health -= 1
+                                    sfx["attack"].play()
                                 elif bx.type == 0 and pressed[1]:
                                     bx.kill()
+                                    sfx["attack"].play()
                                 bx.kill()
                                 break
                         if not clicked:
@@ -166,6 +190,7 @@ while running:
                 if attack == 0:
                     if event.key == pygame.K_a:
                         if indicator == 0 and hits == 1:
+                            sfx["attack"].play()
                             hit = True
                             if effect == 0:
                                 indicator1.fill([179, 24, 18])
@@ -178,6 +203,7 @@ while running:
                             effect = 2
                             timechange += random.randint(1, 4) * 200
                         elif indicator == 0:
+                            sfx["attack"].play()
                             hits -=1
                             if effect == 0:
                                 indicator1.fill([179, 24, 18])
@@ -186,6 +212,7 @@ while running:
                             pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                     if event.key == pygame.K_s:
                         if indicator == 1 and hits == 1:
+                            sfx["attack"].play()
                             hit = True
                             if effect == 0:
                                 indicator2.fill([179, 24, 18])
@@ -198,6 +225,7 @@ while running:
                             effect = 2
                             timechange += random.randint(1, 4) * 200
                         elif indicator == 1:
+                            sfx["attack"].play()
                             hits -=1
                             if effect == 0:
                                 indicator2.fill([179, 24, 18])
@@ -206,6 +234,7 @@ while running:
                             pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                     if event.key == pygame.K_d:
                         if indicator == 2 and hits == 1:
+                            sfx["attack"].play()
                             hit = True
                             if effect == 0:
                                 indicator3.fill([179, 24, 18])
@@ -218,6 +247,7 @@ while running:
                             effect = 2
                             timechange += random.randint(1, 4) * 200
                         elif indicator == 2:
+                            sfx["attack"].play()
                             hits -=1
                             if effect == 0:
                                 indicator3.fill([179, 24, 18])
@@ -229,6 +259,7 @@ while running:
                         pygame.time.set_timer(pygame.USEREVENT+1, 2)
                         ups = 10
                     elif (event.key == pygame.K_RSHIFT or event.key == pygame.K_LSHIFT) and power >= enemypower and enemypower >= min:
+                        sfx["attack"].play()
                         enemypower = 0
                         if effect == 1:
                             amob.health -= 1
@@ -324,15 +355,7 @@ while running:
 
 
     if screen == "game":
-        window.fill([0, 200, 255])
-        window.blit(surf, [80, 0])
-        render = pygame.surface.Surface([700, 400])
-        render.fill([143, 72, 10])
-        window.blit(render, [50, 320])
-        window.blit(side1, [32, 0])
-        window.blit(side2, [704, 0])
-        player.draw(window)
-        update("draw", mobs)
+        gameScreen()
 
     if screen == "attack":
         window.fill([30, 30, 30])
@@ -483,6 +506,7 @@ while running:
                 time = random.randint(5, 9)
                 pygame.time.set_timer(pygame.USEREVENT, time*1000)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+                effect = random.randint(0, 1)
             elif len(newsequence) == len(sequence) and not newsequence == sequence:
                 player.health -= 1
                 newsequence = ""
@@ -490,8 +514,10 @@ while running:
                 time = random.randint(5, 9)
                 pygame.time.set_timer(pygame.USEREVENT, time * 1000)
                 pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+                effect = random.randint(0, 1)
 
             ui.fontSize(32)
+            print(effect)
             if effect == 0:
                 ui.color = attackcolors0[0]
             elif effect == 1:
@@ -539,6 +565,9 @@ while running:
     if screen == "how to play":
         window.fill([30, 30, 30])
 
+    if screen == "attackintro":
+        pass
+
     if screen == "enemy defeated":
         if animation == 0:
             surface = pygame.surface.Surface([8*a, 6*a])
@@ -583,6 +612,7 @@ while running:
             else:
                 animation = 4
                 a = 0
+                sfx["powerup"].play()
         if animation == 4:
             surface = pygame.surface.Surface([800, 600])
             surface.fill([0, 0, 0])
@@ -599,6 +629,8 @@ while running:
             else:
                 animation = 5
                 a = 0
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2000)
+                sfx["powerup"].play()
         if animation == 5:
             surface = pygame.surface.Surface([800, 600])
             surface.fill([0, 0, 0])
@@ -611,6 +643,18 @@ while running:
             window.blit(icons[2], [168, 700 - 290])
             ui.text("GAINED " + str(healthchange), [600, 800 - 290], window, centered=True)
             window.blit(icons[3], [568, 700 - 290])
+            if a >= 1:
+                animation = 6
+                a = 0
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+        if animation == 6:
+            gameScreen()
+            surface = pygame.surface.Surface([800 - (8 * a), 600 - (6 * a)])
+            surface.fill([0, 0, 0])
+            window.blit(surface, [(4 * a), (3 * a)])
+            if a*8 >= 800:
+                screen = "game"
+                pygame.time.set_timer(pygame.USEREVENT + 1, 100)
 
 
     pygame.display.flip()
