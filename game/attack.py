@@ -12,6 +12,10 @@ class hitbox(pygame.sprite.Sprite):
         self.rect.left, self.rect.top = [random.randint(101, 700-self.rect.width), 275]
         self.type = random.randint(0, 1)
         colors = [(255, 10, 0), (249, 255, 127)]
+        shaderect = pygame.surface.Surface([4, 50])
+        shaderect.fill([0, 0, 0])
+        shaderect.set_alpha(100)
+        self.image.blit(shaderect, [self.rect.width-4, 0])
         self.image.fill(colors[self.type])
         self.clicked = False
     def update(self, crect, buttons):

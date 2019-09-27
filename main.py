@@ -1,7 +1,7 @@
 #main.py
 
 import pygame, random
-from game import ui, entities
+from game import ui, entities, animations
 from game import attack as attackmod
 
 pygame.init()
@@ -75,6 +75,7 @@ level = 1
 animation = 0
 coins = 0
 coinchange = 0
+a = 0
 
 sequence = "1234567890"
 newsequence = ""
@@ -83,6 +84,17 @@ characters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
 player = entities.Player()
 mobs = pygame.sprite.Group()
 amob = None
+oldhealth = 10
+
+def createFire():
+    firegroup = pygame.sprite.Group()
+    for i in range(random.randint(800, 1600)):
+        firegroup.add(animations.fire())
+    return firegroup
+
+fires = pygame.sprite.Group()
+fires = createFire()
+introstop = False
 
 def createMobs():
     j = random.randint(1, 3)
@@ -95,6 +107,200 @@ createMobs()
 screen = "menu"
 
 running = True
+
+def attackScreen():
+    global power, effect, screen, window, indicator, sequence, newsequence, time, player, amob, healthchange, coinchange, introstop
+    window.fill([30, 30, 30])
+    if not pygame.mixer.music.get_busy() and not introstop:
+        pygame.mixer.music.load("./music/bit-battle.wav")
+        pygame.mixer.music.play()
+    if player.health <= 0:
+        screen = "game over"
+    if attack == 0:
+        ui.color = [255, 255, 255]
+
+        ui.fontSize(64)
+        ui.text("ATTACK", [400, 5], window, centered=True)
+        ui.text(player.health, [100, 520], window, centered=True)
+        ui.text(amob.health, [690, 520], window, centered=True)
+
+        ui.fontSize(32)
+        window.blit(indicator1, [50, 225])
+        ui.text("Press A", [150, 396], window, centered=True)
+        window.blit(indicator2, [300, 225])
+        ui.text("Press S", [400, 396], window, centered=True)
+        window.blit(indicator3, [550, 225])
+        ui.text("Press D", [650, 396], window, centered=True)
+
+        if indicator >= 0:
+            bar = pygame.surface.Surface([(hits / starthits) * 200, 5])
+            bar2 = pygame.surface.Surface([200, 5])
+
+            bar2.fill([100, 100, 100])
+            bar.fill([255, 255, 255])
+
+            window.blit(bar2, [50 + (indicator * 250), 370])
+            window.blit(bar, [50 + (indicator * 250), 370])
+
+            window.blit(icons[effect], [86 + (indicator * 250), 237])
+
+        ui.fontSize(16)
+        ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+        ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+        if amob.health <= 0:
+            amob.kill()
+            screen = "enemy defeated"
+            animation = 0
+            a = 1
+            pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+            healthchange = random.randint(1, 3)
+
+    if attack == 1:
+        ui.color = [255, 255, 255]
+
+        ui.fontSize(64)
+        ui.text("ATTACK", [400, 5], window, centered=True)
+        ui.text(player.health, [100, 520], window, centered=True)
+        ui.text(amob.health, [690, 520], window, centered=True)
+
+        surface = pygame.surface.Surface([600, 10])
+        surface.fill((255, 255, 255))
+        window.blit(surface, [100, 295])
+
+        boxgrp.draw(window)
+        cursor.update("draw", window)
+
+        ui.fontSize(16)
+        ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+        ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+        if amob.health <= 0:
+            amob.kill()
+            screen = "enemy defeated"
+            animation = 0
+            a = 1
+            pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+            healthchange = random.randint(1, 3)
+
+    if attack == 2:
+        ui.color = [255, 255, 255]
+        ui.fontSize(64)
+        ui.text("ATTACK", [400, 5], window, centered=True)
+        ui.text(player.health, [100, 520], window, centered=True)
+        ui.text(amob.health, [690, 520], window, centered=True)
+
+        ui.fontSize(16)
+        ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+        ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+        powerbar = pygame.surface.Surface([600, 50])
+        powerbar2 = pygame.surface.Surface([(power / 100) * 600, 50])
+
+        powerbar.fill([216, 174, 245])
+        powerbar2.fill([175, 64, 245])
+
+        enemybar = pygame.surface.Surface([600, 50])
+        enemybar2 = pygame.surface.Surface([(enemypower / 100) * 600, 50])
+
+        if effect == 0:
+            enemybar2.fill((255, 10, 0))
+            enemybar.fill((255, 110, 100))
+        elif effect == 1:
+            enemybar2.fill((20, 120, 204))
+            enemybar.fill((120, 220, 255))
+
+        window.blit(enemybar, [100, 340])
+        window.blit(enemybar2, [100, 340])
+
+        window.blit(powerbar, [100, 410])
+        window.blit(powerbar2, [100, 410])
+
+        minbar = pygame.surface.Surface([5, 60])
+        minbar.fill([255, 255, 255])
+        window.blit(minbar, [100 + ((min / 100) * 600), 335])
+
+        maxbar = pygame.surface.Surface([5, 60])
+        maxbar.fill((255, 10, 0))
+        window.blit(maxbar, [100 + ((max / 100) * 600), 405])
+
+        ui.text("POWER", [100, 465], window)
+        ui.text("ENEMY POWER", [100, 320], window)
+
+        if power > max:
+            # min = random.randint(60, 80)
+            # max = random.randint(min+10, 100)
+            # effect = random.randint(0, 1)
+            power = 0
+
+        if amob.health <= 0:
+            amob.kill()
+            screen = "enemy defeated"
+            animation = 0
+            a = 1
+            pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+            healthchange = random.randint(1, 3)
+
+    if attack == 3:
+        ui.color = [255, 255, 255]
+        ui.fontSize(64)
+        ui.text("ATTACK", [400, 5], window, centered=True)
+        ui.text(player.health, [100, 520], window, centered=True)
+        ui.text(amob.health, [690, 520], window, centered=True)
+
+        ui.fontSize(16)
+        ui.text("YOUR HEALTH", [100, 500], window, centered=True)
+        ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+        if len(newsequence) == len(sequence) and newsequence == sequence:
+            if effect == 1:
+                amob.health -= 1
+                sfx["attack"].play()
+            newsequence = ""
+            sequence = generateSequence()
+            time = random.randint(5, 9)
+            pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+            pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+            effect = random.randint(0, 1)
+        elif len(newsequence) == len(sequence) and not newsequence == sequence:
+            player.health -= 1
+            sfx["hit"].play()
+            newsequence = ""
+            sequence = generateSequence()
+            time = random.randint(5, 9)
+            pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+            pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+            effect = random.randint(0, 1)
+
+        ui.fontSize(32)
+        print(effect)
+        if effect == 0:
+            ui.color = attackcolors0[0]
+        elif effect == 1:
+            ui.color = attackcolors0[1]
+        ui.text(sequence, [400, 250], window, centered=True)
+        ui.color = [255, 255, 255]
+        ui.text(newsequence, [400, 300], window, centered=True)
+
+        if time <= 0:
+            print("in")
+            if effect == 0:
+                player.health -= 1
+            newsequence = ""
+            sequence = generateSequence()
+            time = random.randint(5, 9)
+            pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+            pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
+
+        ui.text("time left  " + str(time), [400, 400], window, centered=True)
+
+        if amob.health <= 0:
+            amob.kill()
+            screen = "enemy defeated"
+            animation = 0
+            a = 1
+            pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+            healthchange = random.randint(1, 3)
 
 def gameScreen():
     window.fill([0, 200, 255])
@@ -135,22 +341,16 @@ while running:
                         if cmob.clicked:
                             amob = cmob
                             attack = random.randint(0, 3)
-                            screen = "attack"
+                            screen = "attack intro"
+                            animation = 0
+                            a = 0
                             timechange = 0
+                            oldhealth = player.health
+                            fires = createFire()
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
+                            pygame.time.set_timer(pygame.USEREVENT+1, 8000)
                             coinchange = amob.health
-                            if attack == 2:
-                                effect = random.randint(0, 1)
-                                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                            elif attack == 1:
-                                player.health += 1
-                            elif attack == 3:
-                                sequence = generateSequence()
-                                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                                time = random.randint(5, 9)
-                                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
-                            else:
-                                pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+                            pygame.mixer.music.load("./music/bit-battle.wav")
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
@@ -272,6 +472,8 @@ while running:
                     elif event.key == pygame.K_BACKSPACE and len(newsequence) > 0:
                         newsequence = newsequence[0:len(newsequence)-1]
         if event.type == pygame.USEREVENT:
+            if screen == "attack intro":
+                a += 1
             if screen == "attack":
                 if attack == 0:
                     if not hit and effect == 0:
@@ -311,6 +513,7 @@ while running:
                         effect = random.randint(0, 1)
                         time = random.randint(5, 9)
                         pygame.time.set_timer(pygame.USEREVENT+2, time * 1000)
+                        sfx["hit"].play()
 
         if event.type == pygame.USEREVENT + 1:
             if screen == "attack":
@@ -334,6 +537,7 @@ while running:
                     if enemypower >= 100:
                         if effect == 0:
                             player.health -= 1
+                            sfx["hit"].play()
                         enemypower = 0
                         effect = random.randint(0, 1)
                         max = random.randint(min + 15, 100)
@@ -352,202 +556,24 @@ while running:
             if screen == "attack":
                 if attack == 3:
                     time -= 1
+            if screen == "attack intro":
+                if screen == "attack intro" and a >= 8:
+                    introstop = True
+                    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+                    a = 0
 
 
     if screen == "game":
         gameScreen()
 
     if screen == "attack":
-        window.fill([30, 30, 30])
-        if player.health <= 0:
-            screen = "game over"
-        if attack == 0:
-            ui.color = [255, 255, 255]
-
-            ui.fontSize(64)
-            ui.text("ATTACK", [400,5], window, centered=True)
-            ui.text(player.health, [100, 520], window, centered=True)
-            ui.text(amob.health, [690, 520], window, centered=True)
-
-            ui.fontSize(32)
-            window.blit(indicator1, [50, 225])
-            ui.text("Press A", [150, 396], window, centered=True)
-            window.blit(indicator2, [300, 225])
-            ui.text("Press S", [400, 396], window, centered=True)
-            window.blit(indicator3, [550, 225])
-            ui.text("Press D", [650, 396], window, centered=True)
-
-
-            if indicator >= 0:
-                bar = pygame.surface.Surface([(hits / starthits) * 200, 5])
-                bar2 = pygame.surface.Surface([200, 5])
-
-                bar2.fill([100, 100, 100])
-                bar.fill([255, 255, 255])
-
-                window.blit(bar2, [50 + (indicator*250), 370])
-                window.blit(bar, [50 + (indicator * 250), 370])
-
-                window.blit(icons[effect], [86 + (indicator * 250), 237])
-
-            ui.fontSize(16)
-            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
-            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
-
-            if amob.health <= 0:
-                amob.kill()
-                screen = "enemy defeated"
-                animation = 0
-                a = 1
-                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                healthchange = random.randint(1, 3)
-
-        if attack == 1:
-            ui.color = [255, 255, 255]
-
-            ui.fontSize(64)
-            ui.text("ATTACK", [400, 5], window, centered=True)
-            ui.text(player.health, [100, 520], window, centered=True)
-            ui.text(amob.health, [690, 520], window, centered=True)
-
-            surface = pygame.surface.Surface([600, 10])
-            surface.fill((255, 255, 255))
-            window.blit(surface, [100, 295])
-
-            boxgrp.draw(window)
-            cursor.update("draw", window)
-
-            ui.fontSize(16)
-            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
-            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
-
-            if amob.health <= 0:
-                amob.kill()
-                screen = "enemy defeated"
-                animation = 0
-                a = 1
-                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                healthchange = random.randint(1, 3)
-
-        if attack == 2:
-            ui.color = [255, 255, 255]
-            ui.fontSize(64)
-            ui.text("ATTACK", [400, 5], window, centered=True)
-            ui.text(player.health, [100, 520], window, centered=True)
-            ui.text(amob.health, [690, 520], window, centered=True)
-
-            ui.fontSize(16)
-            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
-            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
-
-            powerbar = pygame.surface.Surface([600, 50])
-            powerbar2 = pygame.surface.Surface([(power/100) * 600, 50])
-
-            powerbar.fill([216, 174, 245])
-            powerbar2.fill([175, 64, 245])
-
-            enemybar = pygame.surface.Surface([600, 50])
-            enemybar2 = pygame.surface.Surface([(enemypower/100) * 600, 50])
-
-            if effect == 0:
-                enemybar2.fill((255, 10, 0))
-                enemybar.fill((255, 110, 100))
-            elif effect == 1:
-                enemybar2.fill((20, 120, 204))
-                enemybar.fill((120, 220, 255))
-
-            window.blit(enemybar, [100, 340])
-            window.blit(enemybar2, [100, 340])
-
-            window.blit(powerbar, [100, 410])
-            window.blit(powerbar2, [100, 410])
-
-            minbar = pygame.surface.Surface([5, 60])
-            minbar.fill([255, 255, 255])
-            window.blit(minbar, [100 + ((min / 100) * 600), 335])
-
-            maxbar = pygame.surface.Surface([5, 60])
-            maxbar.fill((255, 10, 0))
-            window.blit(maxbar, [100 + ((max / 100) * 600), 405])
-
-            ui.text("POWER", [100, 465], window)
-            ui.text("ENEMY POWER", [100, 320], window)
-
-            if power > max:
-                #min = random.randint(60, 80)
-                #max = random.randint(min+10, 100)
-                #effect = random.randint(0, 1)
-                power = 0
-
-            if amob.health <= 0:
-                amob.kill()
-                screen = "enemy defeated"
-                animation = 0
-                a = 1
-                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                healthchange = random.randint(1, 3)
-
-        if attack == 3:
-            ui.color = [255, 255, 255]
-            ui.fontSize(64)
-            ui.text("ATTACK", [400, 5], window, centered=True)
-            ui.text(player.health, [100, 520], window, centered=True)
-            ui.text(amob.health, [690, 520], window, centered=True)
-
-            ui.fontSize(16)
-            ui.text("YOUR HEALTH", [100, 500], window, centered=True)
-            ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
-
-            if  len(newsequence) == len(sequence) and newsequence == sequence:
-                if effect == 1:
-                    amob.health -= 1
-                newsequence = ""
-                sequence = generateSequence()
-                time = random.randint(5, 9)
-                pygame.time.set_timer(pygame.USEREVENT, time*1000)
-                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
-                effect = random.randint(0, 1)
-            elif len(newsequence) == len(sequence) and not newsequence == sequence:
-                player.health -= 1
-                newsequence = ""
-                sequence = generateSequence()
-                time = random.randint(5, 9)
-                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
-                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
-                effect = random.randint(0, 1)
-
-            ui.fontSize(32)
-            print(effect)
-            if effect == 0:
-                ui.color = attackcolors0[0]
-            elif effect == 1:
-                ui.color = attackcolors0[1]
-            ui.text(sequence, [400, 250], window, centered=True)
-            ui.color = [255, 255, 255]
-            ui.text(newsequence, [400, 300], window, centered=True)
-
-            if time <= 0:
-                print("in")
-                if effect == 0:
-                    player.health -= 1
-                newsequence = ""
-                sequence = generateSequence()
-                time = random.randint(5, 9)
-                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
-                pygame.time.set_timer(pygame.USEREVENT + 2, 1000)
-
-            ui.text("time left  " + str(time), [400, 400], window, centered=True)
-
-            if amob.health <= 0:
-                amob.kill()
-                screen = "enemy defeated"
-                animation = 0
-                a = 1
-                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-                healthchange = random.randint(1, 3)
+        attackScreen()
 
     if screen == "game over":
         window.fill([30, 30, 30])
+
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
 
         ui.fontSize(64)
         ui.text("GAME OVER", [400, 5], window, centered=True)
@@ -565,8 +591,60 @@ while running:
     if screen == "how to play":
         window.fill([30, 30, 30])
 
-    if screen == "attackintro":
-        pass
+    if screen == "attack intro":
+        player.health = oldhealth
+        if introstop:
+            window.fill([30, 30, 30])
+            if attack == 2:
+                effect = random.randint(0, 1)
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+            elif attack == 1:
+                player.health += 1
+            elif attack == 3:
+                sequence = generateSequence()
+                pygame.time.set_timer(pygame.USEREVENT + 1, 2)
+                time = random.randint(5, 9)
+                pygame.time.set_timer(pygame.USEREVENT, time * 1000)
+            else:
+                pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+            attackScreen()
+            if len(fires) == 0:
+                screen = "attack"
+                if not pygame.mixer.get_busy():
+                    pygame.mixer.music.play()
+        else:
+            gameScreen()
+        fires.update(introstop)
+        fires.draw(window)
+        if a < 6:
+            if a >= 1 and not introstop:
+                window.blit(player.image, [168, 268])
+            if a >= 2:
+                ui.color = [0, 0, 0]
+                ui.fontSize(36)
+                ui.text("YOU", [200, 360], window, centered=True)
+                ui.color = [255, 255, 255]
+                ui.text("YOU", [204, 364], window, centered=True)
+            if a >= 3:
+                ui.color = [0, 0, 0]
+                ui.fontSize(64)
+                ui.text("VS", [400, 260], window, centered=True)
+                ui.color = [255, 255, 255]
+                ui.text("VS", [404, 264], window, centered=True)
+            if a >= 4:
+                window.blit(amob.image, [568, 268])
+            if a >= 5:
+                ui.color = [0, 0, 0]
+                ui.fontSize(36)
+                ui.text(amob.type, [600, 360], window, centered=True)
+                ui.color = [255, 255, 255]
+                ui.text(amob.type, [604, 364], window, centered=True)
+        if a >= 6 and a < 8:
+            ui.color = [0, 0, 0]
+            ui.fontSize(84)
+            ui.text("Attack", [400, 240], window, centered=True)
+            ui.color = [255, 255, 255]
+            ui.text("attack", [408, 248], window, centered=True)
 
     if screen == "enemy defeated":
         if animation == 0:
@@ -587,6 +665,7 @@ while running:
                 animation = 2
                 a = 0
                 pygame.time.set_timer(pygame.USEREVENT + 1, 2000)
+                pygame.mixer.music.fadeout(1000)
         if animation == 2:
             surface = pygame.surface.Surface([800, 600])
             surface.fill([0, 0, 0])
@@ -655,7 +734,10 @@ while running:
             if a*8 >= 800:
                 screen = "game"
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+                a = 0
+                introstop = False
 
+    print(a)
 
     pygame.display.flip()
 
