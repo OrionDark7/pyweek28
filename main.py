@@ -61,6 +61,7 @@ howto = ui.button("HOW TO PLAY", [400, 340], centered=True)
 menubuttons.add(howto)
 quitbutton = ui.button("QUIT", [400, 390], centered=True)
 menubuttons.add(quitbutton)
+continuebutton = ui.button("CONTINUE", [400, 245], centered=True)
 
 cursor = attackmod.cursor()
 boxgrp = pygame.sprite.Group()
@@ -97,7 +98,10 @@ fires = createFire()
 introstop = False
 
 def createMobs():
-    j = random.randint(1, 3)
+    if level <= 3:
+        j = random.randint(1, level)
+    else:
+        j = random.randint(1, 3)
     for i in range(j):
         mob = entities.Mob([256 + ((i)*100), 278], level)
         mobs.add(mob)
@@ -114,6 +118,8 @@ def attackScreen():
     if not pygame.mixer.music.get_busy() and not introstop:
         pygame.mixer.music.load("./music/bit-battle.wav")
         pygame.mixer.music.play()
+        introstop = True
+    print(pygame.mixer.music.get_busy(), not introstop)
     if player.health <= 0:
         screen = "game over"
     if attack == 0:
@@ -302,8 +308,11 @@ def attackScreen():
             pygame.time.set_timer(pygame.USEREVENT + 1, 2)
             healthchange = random.randint(1, 3)
 
+
 def gameScreen():
-    window.fill([0, 200, 255])
+    ui.color = [255, 255, 255]
+    ui.fontSize(32)
+    window.fill([(level-1)*40, abs(200 - level*40), 255])
     window.blit(surf, [80, 0])
     render = pygame.surface.Surface([700, 400])
     render.fill([143, 72, 10])
@@ -312,6 +321,15 @@ def gameScreen():
     window.blit(side2, [704, 0])
     player.draw(window)
     update("draw", mobs)
+    render = pygame.surface.Surface([608, 300])
+    render.fill([30, 30, 30])
+    window.blit(render, [96, 420])
+    window.blit(icons[2], [116, 430])
+    ui.text(str(coins) + " coins", [300, 445], window, centered=True)
+    window.blit(icons[3], [116, 490])
+    ui.text(str(player.health) + " health", [330, 505], window, centered=True)
+    ui.text("floor " + str(level), [220, 560], window, centered=True)
+
 
 def generateSequence():
     global characters
@@ -351,6 +369,11 @@ while running:
                             pygame.time.set_timer(pygame.USEREVENT+1, 8000)
                             coinchange = amob.health
                             pygame.mixer.music.load("./music/bit-battle.wav")
+                    if continuebutton.click(mouse) and len(mobs) == 0:
+                        level += 1
+                        mobs = pygame.sprite.Group()
+                        createMobs()
+
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
@@ -566,11 +589,26 @@ while running:
     if screen == "game":
         gameScreen()
 
+        if len(mobs) == 0:
+            surface = pygame.surface.Surface([250, 100])
+            surface.fill([30, 30, 30])
+            surface.set_alpha(200)
+            window.blit(surface, [400 - 125, 200])
+            ui.color = [255, 255, 255]
+            ui.fontSize(16)
+            ui.text("Floor Complete", [400, 205], window, centered=True)
+            continuebutton.update(window)
+
+
     if screen == "attack":
         attackScreen()
+        if player.health >= 10:
+            player.health = 10
 
     if screen == "game over":
         window.fill([30, 30, 30])
+
+        mobs = pygame.sprite.Group()
 
         if pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()
@@ -736,8 +774,13 @@ while running:
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                 a = 0
                 introstop = False
+                player.health += healthchange
+                coins += coinchange
+                if player.health > 10:
+                    player.health = 10
 
-    print(a)
+    if screen == "shop":
+        window.fill([30, 30, 30])
 
     pygame.display.flip()
 
