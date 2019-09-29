@@ -3,6 +3,8 @@
 import pygame
 
 pygame.font.init()
+pygame.mixer.init()
+click = pygame.mixer.Sound("./sfx/Select.wav")
 
 font = pygame.font.Font("./font/8-BIT WONDER.TTF", 32)
 color = [0, 0, 0]
@@ -41,5 +43,6 @@ class button(pygame.sprite.Sprite):  # takes global font and color
         clicked = False
         if self.rect.collidepoint(mouse):
             clicked = True
+            click.play()
 
         return clicked

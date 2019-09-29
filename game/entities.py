@@ -23,7 +23,10 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     def __init__(self, pos, level):
         pygame.sprite.Sprite.__init__(self)
-        self.type = random.choice(moblist[0:len(moblist)-((2*level)+1)])
+        if level > 3:
+            self.type = random.choice(moblist)
+        else:
+            self.type = random.choice(moblist[0:len(moblist)-((2*level)+1)])
         self.image = pygame.image.load("./images/"+ self.type + "/" + self.type + ".png")
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = pos

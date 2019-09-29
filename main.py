@@ -7,7 +7,7 @@ from game import attack as attackmod
 pygame.init()
 
 window = pygame.display.set_mode([800, 600])
-pygame.display.set_caption("Tower of Doom ")
+pygame.display.set_caption("The Infinite Tower")
 window.fill([255, 255, 255])
 
 pygame.time.set_timer(pygame.USEREVENT, 1000)
@@ -18,7 +18,8 @@ mouse = [0,0]
 pressed = [0, 0, 0]
 
 pygame.mixer.init()
-sfx = {"attack":pygame.mixer.Sound("./sfx/Attack.wav"), "hit":pygame.mixer.Sound("./sfx/Hit.wav"), "powerup":pygame.mixer.Sound("./sfx/Powerup.wav"), "select":pygame.mixer.Sound("./sfx/Select.wav")}
+sfx = {"attack":pygame.mixer.Sound("./sfx/Attack.wav"), "hit":pygame.mixer.Sound("./sfx/Hit.wav"), "powerup":pygame.mixer.Sound("./sfx/Powerup.wav"), "select":pygame.mixer.Sound("./sfx/Select.wav"),
+       "explode":pygame.mixer.Sound("./sfx/Explosion2.wav"), "nextfloor":pygame.mixer.Sound("./sfx/nextfloor.wav")}
 
 wall2 = pygame.image.load("./images/textures/wall2.png")
 wall = pygame.image.load("./images/textures/wall.png")
@@ -36,6 +37,9 @@ for i in range(10):
 
 attackcolors0 = [(255, 10, 0), (20, 120, 204), (249, 255, 127)]
 icons = [pygame.image.load("./images/icons/block.png"), pygame.image.load("./images/icons/attack.png"), pygame.image.load("./images/icons/coins.png"), pygame.image.load("./images/icons/health.png")]
+title = pygame.image.load("./images/icons/title.png")
+howtoimages = [pygame.image.load("./images/howtoplay/goal.png"), pygame.image.load("./images/howtoplay/attacking.png"), pygame.image.load("./images/howtoplay/mini1.png"), pygame.image.load("./images/howtoplay/mini2.png"),
+               pygame.image.load("./images/howtoplay/mini3.png"), pygame.image.load("./images/howtoplay/mini4.png"), pygame.image.load("./images/howtoplay/shop.png"),]
 hit = True
 effect = 1
 indicator = -1
@@ -50,6 +54,9 @@ indicator1.fill([249, 255, 127])
 indicator2.fill([249, 255, 127])
 indicator3.fill([249, 255, 127])
 
+upgrades = {"attack":1, "critical":0.01, "regen":1, "health":10, "bonus":0}
+price = {"attack":20, "critical":30, "regen":50, "health":40, "bonus":70}
+
 ui.fontSize(32)
 ui.color = [255, 255, 255]
 returntomenu = ui.button("RETURN TO MENU", [400, 290], centered=True)
@@ -62,6 +69,44 @@ menubuttons.add(howto)
 quitbutton = ui.button("QUIT", [400, 390], centered=True)
 menubuttons.add(quitbutton)
 continuebutton = ui.button("CONTINUE", [400, 245], centered=True)
+
+ui.color = [255, 10, 0]
+back = ui.button("BACK", [10, 10])
+
+ui.color = [0, 200, 0]
+
+shopbutton = ui.button("SHOP", [560, 445])
+
+ui.color = [255, 255, 255]
+
+upgradebuttons = pygame.sprite.Group()
+upgrade1 = ui.button("UPGRADE", [520, 100])
+upgradebuttons.add(upgrade1)
+upgrade2 = ui.button("UPGRADE", [520, 200])
+upgradebuttons.add(upgrade2)
+upgrade3 = ui.button("UPGRADE", [520, 300])
+upgradebuttons.add(upgrade3)
+upgrade4 = ui.button("UPGRADE", [520, 400])
+upgradebuttons.add(upgrade4)
+upgrade5 = ui.button("UPGRADE", [520, 500])
+upgradebuttons.add(upgrade5)
+
+howtobuttons = pygame.sprite.Group()
+how1 = ui.button("goal of the game", [10, 150])
+howtobuttons.add(how1)
+how2 = ui.button("attacking", [10, 200])
+howtobuttons.add(how2)
+how3 = ui.button("minigame 1", [10, 250])
+howtobuttons.add(how3)
+how4 = ui.button("minigame 2", [10, 300])
+howtobuttons.add(how4)
+how5 = ui.button("minigame 3", [10, 350])
+howtobuttons.add(how5)
+how6 = ui.button("minigame 4", [10, 400])
+howtobuttons.add(how6)
+how7 = ui.button("the shop", [10, 450])
+howtobuttons.add(how7)
+
 
 cursor = attackmod.cursor()
 boxgrp = pygame.sprite.Group()
@@ -87,6 +132,8 @@ mobs = pygame.sprite.Group()
 amob = None
 oldhealth = 10
 
+nextfloor = False
+
 def createFire():
     firegroup = pygame.sprite.Group()
     for i in range(random.randint(800, 1600)):
@@ -108,18 +155,27 @@ def createMobs():
 
 createMobs()
 
+hti = 0
+
 screen = "menu"
 
 running = True
+
+def attackf():
+    global amob, upgrades
+    crit = random.randint(0, 100)
+    if crit <= upgrades["critical"]*100:
+        amob.health -= upgrades["attack"]*2
+    else:
+        amob.health -= upgrades["attack"]
 
 def attackScreen():
     global power, effect, screen, window, indicator, sequence, newsequence, time, player, amob, healthchange, coinchange, introstop
     window.fill([30, 30, 30])
     if not pygame.mixer.music.get_busy() and not introstop:
         pygame.mixer.music.load("./music/bit-battle.wav")
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(10)
         introstop = True
-    print(pygame.mixer.music.get_busy(), not introstop)
     if player.health <= 0:
         screen = "game over"
     if attack == 0:
@@ -160,7 +216,7 @@ def attackScreen():
             animation = 0
             a = 1
             pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-            healthchange = random.randint(1, 3)
+            healthchange = random.randint(1, 2 + upgrades["regen"])
 
     if attack == 1:
         ui.color = [255, 255, 255]
@@ -187,7 +243,7 @@ def attackScreen():
             animation = 0
             a = 1
             pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-            healthchange = random.randint(1, 3)
+            healthchange = random.randint(1, 2 + upgrades["regen"])
 
     if attack == 2:
         ui.color = [255, 255, 255]
@@ -199,6 +255,9 @@ def attackScreen():
         ui.fontSize(16)
         ui.text("YOUR HEALTH", [100, 500], window, centered=True)
         ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
+
+        ui.text("PRESS THE SPACEBAR TO INCREASE YOUR POWER", [400, 100], window, centered=True)
+        ui.text("PRESS SHIFT TO FINISH THE MANUEVER", [400, 130], window, centered=True)
 
         powerbar = pygame.surface.Surface([600, 50])
         powerbar2 = pygame.surface.Surface([(power / 100) * 600, 50])
@@ -234,9 +293,6 @@ def attackScreen():
         ui.text("ENEMY POWER", [100, 320], window)
 
         if power > max:
-            # min = random.randint(60, 80)
-            # max = random.randint(min+10, 100)
-            # effect = random.randint(0, 1)
             power = 0
 
         if amob.health <= 0:
@@ -245,7 +301,7 @@ def attackScreen():
             animation = 0
             a = 1
             pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-            healthchange = random.randint(1, 3)
+            healthchange = random.randint(1, 2 + upgrades["regen"])
 
     if attack == 3:
         ui.color = [255, 255, 255]
@@ -258,9 +314,14 @@ def attackScreen():
         ui.text("YOUR HEALTH", [100, 500], window, centered=True)
         ui.text("ENEMY HEALTH", [690, 500], window, centered=True)
 
+        if effect == 0:
+            ui.text("TYPE THE SEQUENCE BELOW TO BLOCK", [400, 200], window, centered=True)
+        elif effect == 1:
+            ui.text("TYPE THE SEQUENCE BELOW TO ATTACK", [400, 200], window, centered=True)
+
         if len(newsequence) == len(sequence) and newsequence == sequence:
             if effect == 1:
-                amob.health -= 1
+                attackf()
                 sfx["attack"].play()
             newsequence = ""
             sequence = generateSequence()
@@ -279,7 +340,6 @@ def attackScreen():
             effect = random.randint(0, 1)
 
         ui.fontSize(32)
-        print(effect)
         if effect == 0:
             ui.color = attackcolors0[0]
         elif effect == 1:
@@ -289,7 +349,6 @@ def attackScreen():
         ui.text(newsequence, [400, 300], window, centered=True)
 
         if time <= 0:
-            print("in")
             if effect == 0:
                 player.health -= 1
             newsequence = ""
@@ -306,13 +365,13 @@ def attackScreen():
             animation = 0
             a = 1
             pygame.time.set_timer(pygame.USEREVENT + 1, 2)
-            healthchange = random.randint(1, 3)
+            healthchange = random.randint(1, 2 + upgrades["regen"])
 
 
 def gameScreen():
     ui.color = [255, 255, 255]
     ui.fontSize(32)
-    window.fill([(level-1)*40, abs(200 - level*40), 255])
+    window.fill([40, 200, 255])
     window.blit(surf, [80, 0])
     render = pygame.surface.Surface([700, 400])
     render.fill([143, 72, 10])
@@ -325,11 +384,11 @@ def gameScreen():
     render.fill([30, 30, 30])
     window.blit(render, [96, 420])
     window.blit(icons[2], [116, 430])
-    ui.text(str(coins) + " coins", [300, 445], window, centered=True)
+    ui.text(str(coins) + " coins", [200, 445], window)
     window.blit(icons[3], [116, 490])
-    ui.text(str(player.health) + " health", [330, 505], window, centered=True)
+    ui.text(str(player.health) + " health", [200, 505], window)
     ui.text("floor " + str(level), [220, 560], window, centered=True)
-
+    shopbutton.update(window)
 
 def generateSequence():
     global characters
@@ -358,7 +417,10 @@ while running:
                     for cmob in mobs:
                         if cmob.clicked:
                             amob = cmob
-                            attack = random.randint(0, 3)
+                            if level > 4:
+                                attack = random.randint(0, 3)
+                            else:
+                                attack = random.randint(0, level-1)
                             screen = "attack intro"
                             animation = 0
                             a = 0
@@ -367,25 +429,82 @@ while running:
                             fires = createFire()
                             pygame.time.set_timer(pygame.USEREVENT, 1000)
                             pygame.time.set_timer(pygame.USEREVENT+1, 8000)
-                            coinchange = amob.health
+                            coinchange = amob.health + upgrades["bonus"]
                             pygame.mixer.music.load("./music/bit-battle.wav")
                     if continuebutton.click(mouse) and len(mobs) == 0:
                         level += 1
                         mobs = pygame.sprite.Group()
                         createMobs()
-
+                        nextfloor = False
+                    if shopbutton.click(mouse):
+                        screen = "shop"
                 elif screen == "game over":
                     if returntomenu.click(mouse):
                         screen = "menu"
                         player = entities.Player()
                         createMobs()
-
+                elif screen == "shop":
+                    if upgrade1.click(mouse):
+                        if coins >= price["attack"]:
+                            coins -= price["attack"]
+                            price["attack"] = price["attack"] * random.choice([1.5, 2, 2.5])
+                            upgrades["attack"] += 1
+                    if upgrade2.click(mouse):
+                        if coins >= price["critical"]:
+                            coins -= price["critical"]
+                            price["critical"] = price["critical"] * random.choice([1.5, 2, 2.5])
+                            upgrades["critical"] += random.choice([0.01, 0.02, 0.05])
+                    if upgrade3.click(mouse):
+                        if coins >= price["regen"]:
+                            coins -= price["regen"]
+                            price["regen"] = price["regen"] * random.choice([1.5, 2, 2.5])
+                            upgrades["regen"] += random.randint(1, 3)
+                    if upgrade4.click(mouse):
+                        if coins >= price["health"]:
+                            coins -= price["health"]
+                            price["health"] = price["health"] * random.choice([1.5, 2, 2.5])
+                            upgrades["health"] += random.randint(3, 7)
+                    if upgrade5.click(mouse):
+                        if coins >= price["bonus"]:
+                            coins -= price["bonus"]
+                            price["bonus"] = price["bonus"] * random.choice([1.5, 2, 2.5])
+                            upgrades["bonus"] += random.randint(3, 5)
+                    if back.click(mouse):
+                        screen = "game"
+                        pygame.mixer.music.fadeout(1000)
                 elif screen == "menu":
                     if play.click(mouse):
                         screen = "game"
                     elif quitbutton.click(mouse):
                         running = False
                     elif howto.click(mouse):
+                        screen = "how to play"
+                elif screen == "how to play":
+                    if back.click(mouse):
+                        screen = "menu"
+                    if how1.click(mouse):
+                        hti = 0
+                        screen = "howtoimg"
+                    if how2.click(mouse):
+                        hti = 1
+                        screen = "howtoimg"
+                    if how3.click(mouse):
+                        hti = 2
+                        screen = "howtoimg"
+                    if how4.click(mouse):
+                        hti = 3
+                        screen = "howtoimg"
+                    if how5.click(mouse):
+                        hti = 4
+                        screen = "howtoimg"
+                    if how6.click(mouse):
+                        hti = 5
+                        screen = "howtoimg"
+                    if how7.click(mouse):
+                        hti = 6
+                        screen = "howtoimg"
+                if screen == "howtoimg":
+                    if back.click(mouse):
                         screen = "how to play"
             if pressed[0] == 1 or pressed[2] == 1:
                 if screen == "attack":
@@ -399,7 +518,7 @@ while running:
                                     player.health -= 1
                                     sfx["hit"].play()
                                 elif bx.type == 1 and pressed[0]:
-                                    amob.health -= 1
+                                    attackf()
                                     sfx["attack"].play()
                                 elif bx.type == 0 and pressed[1]:
                                     bx.kill()
@@ -408,9 +527,13 @@ while running:
                                 break
                         if not clicked:
                             player.health -= 1
+                            sfx["hit"].play()
         if event.type == pygame.KEYDOWN:
             if screen == "attack":
+                if event.key == pygame.K_ESCAPE:
+                    screen = "pause"
                 if attack == 0:
+
                     if event.key == pygame.K_a:
                         if indicator == 0 and hits == 1:
                             sfx["attack"].play()
@@ -420,14 +543,15 @@ while running:
                                 indicator = -1
                             else:
                                 indicator1.fill([9, 101, 179])
-                                amob.health -= 1
+                                attackf()
+                                sfx["attack"].play()
                                 indicator = -1
                             pygame.time.set_timer(pygame.USEREVENT, 100)
                             effect = 2
                             timechange += random.randint(1, 4) * 200
                         elif indicator == 0:
                             sfx["attack"].play()
-                            hits -=1
+                            hits -= 1
                             if effect == 0:
                                 indicator1.fill([179, 24, 18])
                             else:
@@ -443,7 +567,8 @@ while running:
                             else:
                                 indicator2.fill([9, 101, 179])
                                 indicator = -1
-                                amob.health -= 1
+                                attackf()
+                                sfx["attack"].play()
                             pygame.time.set_timer(pygame.USEREVENT, 100)
                             effect = 2
                             timechange += random.randint(1, 4) * 200
@@ -464,7 +589,8 @@ while running:
                                 indicator = -1
                             else:
                                 indicator3.fill([9, 101, 179])
-                                amob.health -= 1
+                                attackf()
+                                sfx["attack"].play()
                                 indicator = -1
                             pygame.time.set_timer(pygame.USEREVENT, 100)
                             effect = 2
@@ -485,7 +611,8 @@ while running:
                         sfx["attack"].play()
                         enemypower = 0
                         if effect == 1:
-                            amob.health -= 1
+                            attackf()
+                            sfx["attack"].play()
                         effect = random.randint(0, 1)
                         min = random.randint(50, 80)
                         max = random.randint(min + 15, 100)
@@ -497,10 +624,19 @@ while running:
         if event.type == pygame.USEREVENT:
             if screen == "attack intro":
                 a += 1
+                if a == 1 and not introstop:
+                    sfx["explode"].play()
+                if a == 2 and not introstop:
+                    sfx["explode"].play()
+                if a == 4 and not introstop:
+                    sfx["explode"].play()
+                if a == 5 and not introstop:
+                    sfx["explode"].play()
             if screen == "attack":
                 if attack == 0:
                     if not hit and effect == 0:
                         player.health -= 1
+                        sfx["hit"].play()
                     if not hit:
                         indicator = random.randint(0,2)
                         hits = random.randint(3, 7)
@@ -598,17 +734,22 @@ while running:
             ui.fontSize(16)
             ui.text("Floor Complete", [400, 205], window, centered=True)
             continuebutton.update(window)
+            if not nextfloor:
+                nextfloor = True
+                sfx["nextfloor"].play()
 
 
     if screen == "attack":
         attackScreen()
-        if player.health >= 10:
-            player.health = 10
+        if player.health >= upgrades["health"]:
+            player.health = upgrades["health"]
 
     if screen == "game over":
         window.fill([30, 30, 30])
 
         mobs = pygame.sprite.Group()
+        level = 1
+        coins = 0
 
         if pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()
@@ -619,15 +760,32 @@ while running:
         returntomenu.update(window)
 
     if screen == "menu":
-        window.fill([30, 30, 30])
 
-        ui.fontSize(60)
-        ui.text("TOWER OF DOOM", [400, 5], window, centered=True)
+        window.blit(title, [0, 0])
 
+        surface = pygame.surface.Surface([400, 180])
+        surface.fill([30, 30, 30])
+        surface.set_alpha(100)
+        window.blit(surface, [200, 270])
         menubuttons.draw(window)
 
     if screen == "how to play":
         window.fill([30, 30, 30])
+
+        ui.fontSize(40)
+        ui.text("HOW TO PLAY", [400, 5], window, centered=True)
+        back.update(window)
+
+        ui.fontSize(16)
+        ui.text("Click a topic below to read more about it", [10, 100], window)
+
+        howtobuttons.draw(window)
+
+    if screen == "howtoimg":
+        window.fill([30, 30, 30])
+        window.blit(howtoimages[hti], [0, 0])
+
+        back.update(window)
 
     if screen == "attack intro":
         player.health = oldhealth
@@ -649,7 +807,7 @@ while running:
             if len(fires) == 0:
                 screen = "attack"
                 if not pygame.mixer.get_busy():
-                    pygame.mixer.music.play()
+                    pygame.mixer.music.play(10)
         else:
             gameScreen()
         fires.update(introstop)
@@ -776,11 +934,68 @@ while running:
                 introstop = False
                 player.health += healthchange
                 coins += coinchange
-                if player.health > 10:
-                    player.health = 10
+                if player.health > upgrades["health"]:
+                    player.health = upgrades["health"]
 
     if screen == "shop":
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load("./music/stroll.wav")
+            pygame.mixer.music.play(10)
+
         window.fill([30, 30, 30])
+        ui.color = [255, 255, 255]
+        ui.fontSize(64)
+        ui.text("SHOP", [400, 5], window, centered=True)
+        upgradebuttons.draw(window)
+        ui.fontSize(24)
+        ui.text("ATTACK DAMAGE", [5, 100], window)
+        ui.text("CRITICAL HIT CHANCE", [5, 200], window)
+        ui.text("HEALTH REGEN", [5, 300], window)
+        ui.text("MAX HEALTH", [5, 400], window)
+        ui.text("COIN BONUS", [5, 500], window)
+
+
+        ui.fontSize(12)
+        ui.text("Currently LEVEL " + str(upgrades["attack"]), [5, 140], window)
+        ui.text("Currently " + str(int(upgrades["critical"]*100)) + " percent", [5, 240], window)
+        ui.text("Currently LEVEL " + str(upgrades["regen"]), [5, 340], window)
+        ui.text("Currently LEVEL " + str(upgrades["health"]-9), [5, 440], window)
+        ui.text("Currently recieving " + str(upgrades["bonus"]) + " BONUS COINS", [5, 540], window)
+
+        ui.fontSize(12)
+        if int(price["attack"]) <= coins:
+            ui.color = [255, 255, 30]
+        else:
+            ui.color = [255, 0, 0]
+        ui.text("UPGRADE FOR " + str(int(price["attack"])) + " COINS", [520, 140], window)
+        if int(price["critical"]) <= coins:
+            ui.color = [255, 255, 30]
+        else:
+            ui.color = [255, 0, 0]
+        ui.text("UPGRADE FOR " + str(int(price["critical"])) + " COINS", [520, 240], window)
+        if int(price["regen"]) <= coins:
+            ui.color = [255, 255, 30]
+        else:
+            ui.color = [255, 0, 0]
+        ui.text("UPGRADE FOR " + str(int(price["regen"])) + " COINS", [520, 340], window)
+        if int(price["health"]) <= coins:
+            ui.color = [255, 255, 30]
+        else:
+            ui.color = [255, 0, 0]
+        ui.text("UPGRADE FOR " + str(int(price["health"])) + " COINS", [520, 440], window)
+        if int(price["bonus"]) <= coins:
+            ui.color = [255, 255, 30]
+        else:
+            ui.color = [255, 0, 0]
+        ui.text("UPGRADE FOR " + str(int(price["bonus"])) + " COINS", [520, 540], window)
+
+        ui.fontSize(32)
+        ui.color = [255, 255, 30]
+        window.blit(icons[2], [600, 5])
+        ui.text(str(coins), [675, 18], window)
+
+        back.update(window)
 
     pygame.display.flip()
 
